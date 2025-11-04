@@ -68,7 +68,7 @@ def get_env_vars(
             sys.exit(1)
 
     if OS_NAME == 'lin':
-        fontconfig_path = get_path(os.path.join("fontconfig", user_agent_os))
+        fontconfig_path = get_path(os.path.join("fontconfigs", user_agent_os))
         env_vars['FONTCONFIG_PATH'] = fontconfig_path
 
     return env_vars
