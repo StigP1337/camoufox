@@ -545,6 +545,23 @@ def launch_options(
     # Set a fixed font spacing seed
     set_into(config, 'fonts:spacing_seed', randint(0, 1_073_741_823))  # nosec
 
+    # Map generic font families to OS-specific fonts via Firefox preferences
+    # This ensures monospace, serif, and sans-serif render with different fonts
+    # Firefox preferences override fontconfig, so we must set these explicitly
+    # Note: target_os uses short names (mac/win/lin) not full names (macos/windows/linux)
+    if target_os == 'mac':
+        firefox_user_prefs['font.name.monospace.x-western'] = 'Menlo'
+        firefox_user_prefs['font.name.serif.x-western'] = 'Times'
+        firefox_user_prefs['font.name.sans-serif.x-western'] = 'Helvetica'
+    elif target_os == 'win':
+        firefox_user_prefs['font.name.monospace.x-western'] = 'Consolas'
+        firefox_user_prefs['font.name.serif.x-western'] = 'Times New Roman'
+        firefox_user_prefs['font.name.sans-serif.x-western'] = 'Arial'
+    elif target_os == 'lin':
+        firefox_user_prefs['font.name.monospace.x-western'] = 'Cousine'
+        firefox_user_prefs['font.name.serif.x-western'] = 'Tinos'
+        firefox_user_prefs['font.name.sans-serif.x-western'] = 'Arimo'
+
     # Set geolocation
     if geoip:
         geoip_allowed()  # Assert that geoip is allowed
