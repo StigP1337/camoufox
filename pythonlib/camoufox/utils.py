@@ -68,7 +68,11 @@ def get_env_vars(
             sys.exit(1)
 
     if OS_NAME == 'lin':
-        fontconfig_path = get_path(os.path.join("fontconfigs", user_agent_os))
+        # Map short OS names (lin/mac/win) to full directory names (linux/macos/windows)
+        # The bundle uses full names but runtime code uses short names
+        os_dir_map = {'lin': 'linux', 'mac': 'macos', 'win': 'windows'}
+        os_dir = os_dir_map.get(user_agent_os, user_agent_os)
+        fontconfig_path = get_path(os.path.join("fontconfigs", os_dir))
         env_vars['FONTCONFIG_PATH'] = fontconfig_path
 
     return env_vars
