@@ -2,8 +2,8 @@
 # NOTE: Root .gitignore excludes /camoufox-*, but we want to index Firefox source.
 # Override with ! to include, then explicitly exclude build artifacts.
 
-# Include Firefox source (override .gitignore)
-!camoufox-*/
+# Exclude camoufox source
+camoufox-*/
 !firefox-*/
 !mozilla-unified/
 
