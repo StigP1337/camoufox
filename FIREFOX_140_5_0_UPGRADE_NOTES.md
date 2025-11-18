@@ -46,6 +46,7 @@ make git-dir
 - `patches/camoufox-branding.patch` - Added new patch to fix the MOZ_APP_VENDOR, MOZ_APP_PROFILE build error by adapting to Firefox 142's configuration system changes (Bug 1898177), following the "broken patch" workflow for creating patches.
 - `patches/config.patch` - **FIXED (macOS compatibility)** - Updated patch context for Firefox 142 build system changes. Firefox added two new SPHINX_TREES entries (`content-security` and `jsloader`) to root `moz.build`, shifting line numbers from 220 to 232. Old patch context expected `update-infrastructure` as last SPHINX_TREES entry, but new context includes the additional entries. This caused BSD patch (macOS default) to fail due to strict context matching, while GNU patch succeeded with fuzzy matching. Regenerated patch with correct Firefox 142 context - now applies cleanly with both BSD and GNU patch.
 - `patches/webgl-spoofing.patch` - **FIXED** - Added explicit `static_cast<uint8_t>()` casts for GetShaderPrecisionFormat to fix narrowing conversion errors (Firefox 142 changed ShaderPrecisionFormat fields to uint8_t while MaskConfig returns int32_t)
+- `patches/fingerprint-injection.patch` - **FIXED** - Hunk #13 failed in `Navigator::OnLine()` at line 624. Firefox added a new `ShouldResistFingerprinting()` check at the beginning of the function that wasn't present in the original patch. Fixed by inserting the MaskConfig check BEFORE the RFP check, ensuring Camoufox's spoofing takes precedence over Firefox's built-in fingerprinting resistance.
 
 ✅ **Removed/Obsolete Patches:**
 - `patches/librewolf/sed-patches/allow-searchengines-non-esr.patch` - **DELETED** - Firefox 142 natively supports SearchEngines in non-ESR builds (Bug 1961839, April 2025)
@@ -162,3 +163,51 @@ If this approach causes issues, we still have:
 
 For the general workflow of applying patches, fixing broken patches, and using checkpoints, see [WORKFLOW.md](./WORKFLOW.md).
 
+- `patches/playwright/0-playwright.patch` - Applied
+- `patches/000-gitignore.patch` - Applied
+- `patches/playwright/1-leak-fixes.patch` - Applied
+- `patches/ghostery/Disable-Onboarding-Messages.patch` - Applied
+- `patches/all-addons-private-mode.patch` - Applied
+- `patches/anti-font-fingerprinting.patch` - Applied
+- `patches/audio-context-spoofing.patch` - Applied
+- `patches/librewolf/bootstrap.patch` - Applied
+- `patches/browser-init.patch` - Applied
+- `patches/camoufox-branding.patch` - Applied
+- `patches/chromeutil.patch` - Applied
+- `patches/config.patch` - Applied
+- `patches/librewolf/context-menu.patch` - Applied
+- `patches/librewolf/custom-ubo-assets-bootstrap-location.patch` - Applied
+- `patches/librewolf/dbus_name.patch` - Applied
+- `patches/librewolf/devtools-bypass.patch` - Applied
+- `patches/librewolf/disable-data-reporting-at-compile-time.patch` - Applied
+- `patches/disable-extension-newtab.patch` - Applied
+- `patches/librewolf/sed-patches/disable-pocket.patch` - Applied
+- `patches/disable-remote-subframes.patch` - Applied
+- `patches/librewolf/ui-patches/firefox-view.patch` - Applied
+- `patches/font-hijacker.patch` - Applied
+- `patches/force-default-pointer.patch` - Applied
+- `patches/geolocation-spoofing.patch` - Applied
+- `patches/global-style-sheets.patch` - Applied
+- `patches/librewolf/ui-patches/handlers.patch` - Applied
+- `patches/librewolf/ui-patches/hide-default-browser.patch` - Applied
+- `patches/locale-spoofing.patch` - Applied
+- `patches/media-device-spoofing.patch` - Applied
+- `patches/librewolf/mozilla_dirs.patch` - Applied
+- `patches/network-patches.patch` - Applied
+- `patches/no-css-animations.patch` - Applied
+- `patches/no-search-engines.patch` - Applied
+- `patches/pin-addons.patch` - Applied
+- `patches/librewolf/ui-patches/remove-branding-urlbar.patch` - Applied
+- `patches/librewolf/ui-patches/remove-cfrprefs.patch` - Applied
+- `patches/librewolf/ui-patches/remove-organization-policy-banner.patch` - Applied
+- `patches/librewolf/rust-gentoo-musl.patch` - Applied
+- `patches/screen-hijacker.patch` - Applied
+- `patches/shadow-root-bypass.patch` - Applied
+- `patches/librewolf/sed-patches/stop-undesired-requests.patch` - Applied
+- `patches/timezone-spoofing.patch` - Applied
+- `patches/librewolf/urlbarprovider-interventions.patch` - Applied
+- `patches/voice-spoofing.patch` - Applied
+- `patches/webgl-spoofing.patch` - Applied
+- `patches/webrtc-ip-spoofing.patch` - Applied
+- `patches/websocket-port-remapping.patch` - Applied
+- `patches/windows-theming-bug-modified.patch` - Applied
