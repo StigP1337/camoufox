@@ -33,12 +33,12 @@ The firefox repo directory starts checked out to the matching git hash that play
 Here are key commands:
 
 ```bash
-make revert  # Start with clean Firefox source
-make tagged-checkpoint  # Tag the current commit as "checkpoint"
-make revert-checkpoint # Revert back to the "checkpoint"
-make patch <patchfile> # apply the patch file
-cd /home/azureuser/camoufox && python3 scripts/next_patch.py patches/<file>.patch # find next patch
-make dir # apply all the patches. will bomb once it hits a failure.
+make revert                    # Start with clean Firefox source
+make tagged-checkpoint         # Tag the current commit as "checkpoint"
+make revert-checkpoint         # Revert back to the "checkpoint"
+make patch <patchfile>         # Apply the patch file
+python3 scripts/next_patch.py <last_patch>  # Find next patch alphabetically
+make dir                       # Apply all patches (will stop at first failure)
 ```
 
 ## Makefile Targets Reference
@@ -64,7 +64,7 @@ make retag-baseline                  # Copy updated additions, rebuild baseline
 make dir                            # Apply all existing patches
 make tagged-checkpoint              # Tag this as checkpoint
 vim dom/base/Navigator.cpp          # Make your new changes
-cd camoufox-142.0.1-fork.26
+cd <ff_source_dir>
 git diff > ../patches/my-new-feature.patch  # Only shows your changes
 ```
 
@@ -72,23 +72,25 @@ git diff > ../patches/my-new-feature.patch  # Only shows your changes
 
 ## General Workflow
 
-Follow the "Inital Workflow" unless the human says it's in a good state.
+**Start with:** `make patch patches/playwright/0-playwright.patch`
 
-The general workflow assumes you've checkpointed the last working patch and you can roll back to it via `make revert-checkpoint`
+Then iteratively:
+1. Apply patch: `make patch <patchfile>`
+2. Did it work? Great! Do `make tagged-checkpoint` and continue to next patch
+3. Find next patch: `python3 scripts/next_patch.py <last-patch>`
+4. If a patch fails, **STOP AND WAIT FOR HUMAN INTERVENTION**
+   - Complex patch fixes require deeper analysis and should be delegated to more capable models
+   - See "Fixing a broken patch" below for the investigation process
+   - The human will likely want to summon a more powerful LLM model to handle complex reasoning
 
-1) Find next: `cd /home/azureuser/camoufox && python3 scripts/next_patch.py patches/<last-patch>.patch`
-2) Apply it: `make patch <next-patchfile>`
-3) Did it work?  Great!  Do a `make tagged-checkpoint` and go back to step 1
-4) If it didn't work, then you need to figure out why.  IF YOU GET HERE, *STOP AND WAIT FOR HUMAN INTERVENTION!  THEY MAY WANT TO SWITCH LLM MODELS!!!!*  This is the hard part that requires actual "thinking".  See the "Fixing a broken patch" below.  The human will no doubt want to summon powerful models to do this....
-5) Once you've walked through all the patches and they all work, do a `make revert && make dev`
-6) I don't know what happens at this point.... so stop and say "hi".
+Once all patches apply successfully, the Firefox source will be fully patched and ready for building.
 
 ### Shortcut:
 
 Most of these patches will probably successfully apply... so you can "shortcut" the workflow into a single "opportunistic" command line.  When starting from a tagged checkpoint or the untagged branch you can do something like:
 
 ```bash
-cd /home/azureuser/camoufox && make patch patches/webgl-spoofing.patch && make tagged-checkpoint && git add FIREFOX_142_UPGRADE_NOTES.md && echo "- \`patches/webgl-spoofing.patch\` - Applied (WebGL fingerprinting spoofing)" >> FIREFOX_142_UPGRADE_NOTES.md && git add FIREFOX_142_UPGRADE_NOTES.md && git commit -m "Document successful application of webgl-spoofing.patch" && python3 scripts/next_patch.py patches/webgl-spoofing.patch
+make patch patches/webgl-spoofing.patch && make tagged-checkpoint && git add FIREFOX_140_5_0_UPGRADE_NOTES.md && echo "- \`patches/webgl-spoofing.patch\` - Applied (WebGL fingerprinting spoofing)" >> FIREFOX_140_5_0_UPGRADE_NOTES.md && git add FIREFOX_140_5_0_UPGRADE_NOTES.md && git commit -m "Document successful application of webgl-spoofing.patch" && python3 scripts/next_patch.py patches/webgl-spoofing.patch
 ```
 
 it will apply the patch, tag the checkpoint, add notes, commit the mess and then print out the next patch to apply.  If `make patch` fails, it will fail before tagging the checkpoint. Just keep doing this over and over until either something fails or there are no more patches to apply!
@@ -136,16 +138,16 @@ Then and only then are you ready for this:
 Example:
 
 ```bash
-cd /home/azureuser/camoufox/camoufox-142.0.1-fork.27 && git diff  > ../patches/font-hijacker.patch
+git diff > ../patches/font-hijacker.patch
 ```
 
 [BAD EMOJI] You are *not* doing a selective diff (eg `git diff -- layout/style/moz.build > ../patches/font-hijacker.patch`)!  *NO*..  you are creating a patch file to encompass all changes to the *entire* repo!  So do a `git status` to make sure everything the original patch file changed (sans any intentional removals or additions) is included.
 4) Validate: Do a `git diff` on the patch file and confirm it changed what you expected.  Did you miss hunks that should have been patched?  If you did, you aren't ready for the next step.  Stop right now and wait for human help.  In short, you missed something!
 5) Test: Confirm it works by doing a `make revert-checkpoint` to go back to working state, apply the patch `make patch patchfile`, then a `git status` / `git diff` to confirm it applies as expected
-6) Notate: Update the [FIREFOX_142_UPGRADE_NOTES.md] file with the patch you fixed and what your research showed.  This is important because we are intentionally not building firefox each patch.... for all we know we broke the build!
+6) Notate: Update the [FIREFOX_140_5_0_UPGRADE_NOTES.md] file with the patch you fixed and what your research showed.  This is important because we are intentionally not building firefox each patch.... for all we know we broke the build!
 7) Commit: Commit the patch and changes to the upgrade notes with a good description in the main repo.
 8) Checkpoint: Do a `make tagged-checkpoint` in the firefox repo since the repo is now at a working good state.
-9) Next: `cd /home/azureuser/camoufox && python3 scripts/next_patch.py patches/font-hijacker.patch` to find what's next
+9) Next: `python3 scripts/next_patch.py patches/font-hijacker.patch` to find what's next
 
 ### Investigation Guidelines:
 
@@ -177,7 +179,7 @@ cd /home/azureuser/camoufox/camoufox-142.0.1-fork.27 && git diff  > ../patches/f
 6) **Only delete a patch if Firefox implements the stealth feature natively**
    - Example: If Firefox now hides CFR prefs by default for all users
    - Verify by checking Firefox's default config and UI
-   - Document why the feature is now native in `FIREFOX_142_UPGRADE_NOTES.md`
+   - Document why the feature is now native in `FIREFOX_140_5_0_UPGRADE_NOTES.md`
 
 7) Update this doc if you have any new insights
 
@@ -192,13 +194,13 @@ If you start from `unpatched` (no checkpoints exist):
 Human says "workspace is not in a clean state! clean it up!" or if you aren't sure what state the firefox git repo is but you know the last working patch, you can do the following:
 
 ```bash
-cd {repodir} && git status # Is there anything outstanding?  If yes, HALT! Summon your human!
+git status # Is there anything outstanding?  If yes, HALT! Summon your human!
 make revert
-make patch ./patches/patch1.patch && make patch ./patches/patch2.patch ..... # one make per successful patch.  do them all in a single line or you'll annoy the human!
+make patch ./patches/patch1.patch && make patch ./patches/patch2.patch ..... # one make per successful patch
 make tagged-checkpoint # boom you are in business
 ```
 
-Tip: If you know the last successful patch, use `cd /home/azureuser/camoufox && python3 scripts/next_patch.py patches/config.patch` to find what's next.
+Tip: If you know the last successful patch, use `python3 scripts/next_patch.py patches/config.patch` to find what's next.
 ### How to know which patches succeeded?
 
 Hopefully the human gave you the results of `make dev`.... well look at it and you'll see each patch
