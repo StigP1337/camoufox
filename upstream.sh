@@ -1,4 +1,4 @@
-version=142.0.1
-release=fork.26
+version=140.5.0
+release=fork.27
 closedsrc_rev=1.0.0
-ff_commit=361373160356d92cb5cd4d67783a3806c776ee78  # Playwright Firefox 142 base commit
+ff_commit=491f9dddcc1aff9fa90de90050b0eb0bd770403e  # Playwright Firefox 140.5.0esr5
